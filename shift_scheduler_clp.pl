@@ -1,18 +1,20 @@
-% By Micah Jones
+% By Tim Austin
+% Adapted from work by Micah Jones
 %
-% Based loosely on the concept for a nurse scheduling program from the following paper:
-% https://www.researchgate.net/publication/221603658_Nurse_Scheduling_using_Constraint_Logic_Programming
-%
-% For more real world applications of Prolog and CLP in particular, see:
-% http://4c.ucc.ie/~hsimonis/ccl2.pdf
-%
-% Special thanks to Markus Triska for his helpful advice in cleaning up the code here.
+% Original Credits:
+% % Based loosely on the concept for a nurse scheduling program from the following paper:
+% % https://www.researchgate.net/publication/221603658_Nurse_Scheduling_using_Constraint_Logic_Programming
+% % 
+% % For more real world applications of Prolog and CLP in particular, see:
+% % http://4c.ucc.ie/~hsimonis/ccl2.pdf
+% % 
+% % Special thanks to Markus Triska for his helpful advice in cleaning up the code here.
 
 :- use_module(library(lists)).
 :- use_module(library(apply)).
 :- use_module(library(clpfd)).
 
-:- dynamic employee/1.
+:- dynamic employee/2.
 :- dynamic employee_max_shifts/2.
 :- dynamic employee_skill/2.
 :- dynamic task_skills/2.
@@ -20,13 +22,15 @@
 :- dynamic task/2.
 :- dynamic employee_assigned/2.
 
-employee(micah).
-employee(jonathan).
-employee(blake).
+% one entry for each position
+% employee(staff_name, fte) 
+employee('nurse1', '1.0').
+employee('nurse2', '0.84').
 
-employee_max_shifts(micah,10).
-employee_max_shifts(jonathan,12).
-employee_max_shifts(blake,10).
+% match the fte to the number of shifts required in the period
+% employee_max_shifts(fte, number_of_shifts).
+employee_max_shifts('1.0', 80).
+employee_max_shifts('0.84', 63).
 
 employee_skill(micah,programming).
 employee_skill(micah,writing).
