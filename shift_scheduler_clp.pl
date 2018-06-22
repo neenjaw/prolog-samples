@@ -14,158 +14,164 @@
 :- use_module(library(apply)).
 :- use_module(library(clpfd)).
 
-:- dynamic employee/2.
-:- dynamic employee_min_max_shifts/2.
+:- dynamic position/2.
+:- dynamic fte_min_max_shifts/2.
 :- dynamic employee_skill/2.
 :- dynamic task_skills/2.
 :- dynamic employee_unavailable/2.
 :- dynamic task/2.
 :- dynamic employee_assigned/2.
 
+employee(Name, ShiftCount) :-
+    position(Name, FTE),
+    fte_min_max_shifts(FTE, ShiftCount).
+
+
 % one entry for each position
-% employee(staff_name, fte) 
-employee('nurse001', '1.00').
-employee('nurse002', '1.00').
-employee('nurse003', '1.00').
-employee('nurse004', '1.00').
-employee('nurse005', '1.00').
-employee('nurse006', '1.00').
-employee('nurse007', '1.00').
-employee('nurse008', '1.00').
-employee('nurse009', '1.00').
-employee('nurse010', '1.00').
-employee('nurse011', '1.00').
-employee('nurse012', '1.00').
-employee('nurse013', '1.00').
-employee('nurse014', '1.00').
-employee('nurse015', '1.00').
-employee('nurse016', '1.00').
-employee('nurse017', '1.00').
-employee('nurse018', '1.00').
-employee('nurse019', '1.00').
-employee('nurse020', '1.00').
-employee('nurse021', '1.00').
-employee('nurse022', '1.00').
-employee('nurse023', '1.00').
-employee('nurse024', '1.00').
-employee('nurse025', '1.00').
-employee('nurse026', '1.00').
-employee('nurse027', '1.00').
-employee('nurse028', '1.00').
-employee('nurse029', '1.00').
-employee('nurse030', '1.00').
-employee('nurse031', '1.00').
-employee('nurse032', '1.00').
-employee('nurse033', '1.00').
-employee('nurse034', '1.00').
-employee('nurse035', '1.00').
-employee('nurse036', '1.00').
-employee('nurse037', '1.00').
-employee('nurse038', '1.00').
-employee('nurse039', '1.00').
-employee('nurse040', '1.00').
-employee('nurse041', '1.00').
-employee('nurse042', '1.00').
-employee('nurse043', '1.00').
-employee('nurse044', '1.00').
-employee('nurse045', '1.00').
-employee('nurse046', '1.00').
-employee('nurse047', '1.00').
-employee('nurse048', '1.00').
-employee('nurse049', '1.00').
-employee('nurse050', '1.00').
-employee('nurse051', '1.00').
-employee('nurse052', '1.00').
-employee('nurse053', '1.00').
-employee('nurse054', '1.00').
-employee('nurse055', '1.00').
-employee('nurse056', '1.00').
-employee('nurse057', '1.00').
-employee('nurse058', '0.99').
-employee('nurse059', '1.00').
-employee('nurse060', '1.00').
-employee('nurse061', '1.00').
-employee('nurse062', '1.00').
-employee('nurse063', '1.00').
-employee('nurse064', '1.00').
-employee('nurse065', '1.00').
-employee('nurse066', '1.00').
-employee('nurse067', '1.00').
-employee('nurse068', '1.00').
-employee('nurse069', '1.00').
-employee('nurse070', '1.00').
-employee('nurse071', '1.00').
-employee('nurse072', '1.00').
-employee('nurse073', '1.00').
-employee('nurse074', '1.00').
-employee('nurse075', '1.00').
-employee('nurse076', '1.00').
-employee('nurse077', '1.00').
-employee('nurse078', '1.00').
-employee('nurse079', '1.00').
-employee('nurse080', '1.00').
-employee('nurse081', '1.00').
-employee('nurse082', '1.00').
-employee('nurse083', '1.00').
-employee('nurse084', '1.00').
-employee('nurse085', '1.00').
-employee('nurse086', '1.00').
-employee('nurse087', '1.00').
-employee('nurse088', '1.00').
-employee('nurse089', '1.00').
-employee('nurse090', '0.60').
-employee('nurse091', '0.85').
-employee('nurse092', '0.85').
-employee('nurse093', '1.00'). % weekend work
-employee('nurse094', '1.00'). % weekend work
-employee('nurse095', '1.00').
-employee('nurse096', '0.60').
-employee('nurse097', '0.60').
-employee('nurse098', '0.63').
-employee('nurse099', '0.60').
-employee('nurse100', '0.60').
-employee('nurse101', '0.60').
-employee('nurse102', '0.60').
-employee('nurse103', '0.60').
-employee('nurse104', '0.60').
-employee('nurse105', '0.60').
-employee('nurse106', '0.60').
-employee('nurse107', '0.60').
-employee('nurse108', '0.60').
-employee('nurse109', '0.60').
-employee('nurse110', '0.60').
-employee('nurse111', '0.60').
-employee('nurse112', '0.60').
-employee('nurse113', '0.53').
-employee('nurse114', '0.53').
-employee('nurse115', '0.53').
-employee('nurse116', '0.53').
-employee('nurse117', '0.43').
+% position(staff_name, fte) 
+position('nurse001', '1.00').
+% position('nurse002', '1.00').
+% position('nurse003', '1.00').
+% position('nurse004', '1.00').
+position('nurse005', '1.00').
+position('nurse006', '1.00').
+% position('nurse007', '1.00').
+% position('nurse008', '1.00').
+% position('nurse009', '1.00').
+% position('nurse010', '1.00').
+% position('nurse011', '1.00').
+% position('nurse012', '1.00').
+% position('nurse013', '1.00').
+% position('nurse014', '1.00').
+% position('nurse015', '1.00').
+% position('nurse016', '1.00').
+% position('nurse017', '1.00').
+% position('nurse018', '1.00').
+% position('nurse019', '1.00').
+% position('nurse020', '1.00').
+% position('nurse021', '1.00').
+% position('nurse022', '1.00').
+% position('nurse023', '1.00').
+% position('nurse024', '1.00').
+% position('nurse025', '1.00').
+% position('nurse026', '1.00').
+% position('nurse027', '1.00').
+% position('nurse028', '1.00').
+% position('nurse029', '1.00').
+% position('nurse030', '1.00').
+% position('nurse031', '1.00').
+% position('nurse032', '1.00').
+% position('nurse033', '1.00').
+% position('nurse034', '1.00').
+% position('nurse035', '1.00').
+% position('nurse036', '1.00').
+% position('nurse037', '1.00').
+% position('nurse038', '1.00').
+% position('nurse039', '1.00').
+% position('nurse040', '1.00').
+% position('nurse041', '1.00').
+% position('nurse042', '1.00').
+% position('nurse043', '1.00').
+% position('nurse044', '1.00').
+% position('nurse045', '1.00').
+% position('nurse046', '1.00').
+% position('nurse047', '1.00').
+% position('nurse048', '1.00').
+% position('nurse049', '1.00').
+% position('nurse050', '1.00').
+% position('nurse051', '1.00').
+% position('nurse052', '1.00').
+% position('nurse053', '1.00').
+% position('nurse054', '1.00').
+% position('nurse055', '1.00').
+% position('nurse056', '1.00').
+% position('nurse057', '1.00').
+% position('nurse058', '0.99').
+% position('nurse059', '1.00').
+% position('nurse060', '1.00').
+% position('nurse061', '1.00').
+% position('nurse062', '1.00').
+% position('nurse063', '1.00').
+% position('nurse064', '1.00').
+% position('nurse065', '1.00').
+% position('nurse066', '1.00').
+% position('nurse067', '1.00').
+% position('nurse068', '1.00').
+% position('nurse069', '1.00').
+% position('nurse070', '1.00').
+% position('nurse071', '1.00').
+% position('nurse072', '1.00').
+% position('nurse073', '1.00').
+% position('nurse074', '1.00').
+% position('nurse075', '1.00').
+% position('nurse076', '1.00').
+% position('nurse077', '1.00').
+% position('nurse078', '1.00').
+% position('nurse079', '1.00').
+% position('nurse080', '1.00').
+% position('nurse081', '1.00').
+% position('nurse082', '1.00').
+% position('nurse083', '1.00').
+% position('nurse084', '1.00').
+% position('nurse085', '1.00').
+% position('nurse086', '1.00').
+% position('nurse087', '1.00').
+% position('nurse088', '1.00').
+% position('nurse089', '1.00').
+% position('nurse090', '0.60').
+% position('nurse091', '0.85').
+% position('nurse092', '0.85').
+% position('nurse093', '1.00'). % weekend work
+% position('nurse094', '1.00'). % weekend work
+% position('nurse095', '1.00').
+% position('nurse096', '0.60').
+% position('nurse097', '0.60').
+% position('nurse098', '0.63').
+% position('nurse099', '0.60').
+% position('nurse100', '0.60').
+% position('nurse101', '0.60').
+% position('nurse102', '0.60').
+% position('nurse103', '0.60').
+% position('nurse104', '0.60').
+% position('nurse105', '0.60').
+% position('nurse106', '0.60').
+% position('nurse107', '0.60').
+% position('nurse108', '0.60').
+% position('nurse109', '0.60').
+% position('nurse110', '0.60').
+% position('nurse111', '0.60').
+% position('nurse112', '0.60').
+% position('nurse113', '0.53').
+% position('nurse114', '0.53').
+% position('nurse115', '0.53').
+% position('nurse116', '0.53').
+% position('nurse117', '0.43').
 
 % match the fte to the number of shifts required in the period
-% employee_max_shifts(fte, number_of_shifts).
-employee_min_max_shifts('1.00', 80).
-employee_min_max_shifts('0.99', 79).
-employee_min_max_shifts('0.85', 68).
-employee_min_max_shifts('0.80', 64).
-employee_min_max_shifts('0.63', 50).
-employee_min_max_shifts('0.60', 48).
-employee_min_max_shifts('0.53', 42).
-employee_min_max_shifts('0.43', 34).
+% fte_max_shifts(fte, number_of_shifts).
+fte_min_max_shifts('1.00', 80).
+fte_min_max_shifts('0.99', 79).
+fte_min_max_shifts('0.85', 68).
+fte_min_max_shifts('0.80', 64).
+fte_min_max_shifts('0.63', 50).
+fte_min_max_shifts('0.60', 48).
+fte_min_max_shifts('0.53', 42).
+fte_min_max_shifts('0.43', 34).
 
-% employee_skill('nurse1',clinician).
-% employee_skill('nurse2',clinician).
-% employee_skill('nurse3',clinician).
-% employee_skill('nurse4',clinician).
-% employee_skill('nurse5',bedside).
+employee_skill('nurse001',clinician).
+% employee_skill('nurse002',clinician).
+% employee_skill('nurse003',clinician).
+% employee_skill('nurse004',clinician).
+employee_skill('nurse005',bedside).
+employee_skill('nurse006',bedside).
+% employee_skill...
 
 task_skills(nc,[clinician]).
 task_skills(prn,[bedside]).
-task_skills(bedside,[bedside]).
+task_skills(bedside1,[bedside]).
+% task_skills(bedside2...
 
-% employee_unavailable(micah,shift(friday,1)).
-% employee_unavailable(micah,shift(friday,2)).
-% employee_unavailable(micah,shift(saturday,1)).
+% If needed to assert that some can't be available for some shifts
 % employee_unavailable(micah,shift(saturday,2)).
 
 shifts([
@@ -179,7 +185,10 @@ shifts([
     ]).
 
 % tasks to assign
-% task(documentation,shift(saturday,1)).
+task(nc,shift(_, _)).
+task(prn,shift(_, day)).
+task(bedside01,shift(_,_)).
+
 % task(documentation,shift(monday,2)).
 % 
 % task(web_design,shift(monday,1)).
