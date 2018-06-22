@@ -292,11 +292,11 @@ schedule(Schedule) :-
     
 % constraints(+Assoc,+Employees,+Tasks)
 constraints(Assoc,Es,Ts) :-
-    core_constraints(Assoc,Es,Ts),
-    simul_constraints(Assoc,Es,Ts),
+    core_constraints(Assoc,Es,Ts), %
+    simul_constraints(Assoc,Es,Ts), %
     min_max_shifts_constraints(Assoc,Es,Ts),
     unavailable_constraints(Assoc,Es,Ts),
-    skills_constraints(Assoc,Es,Ts),
+    skills_constraints(Assoc,Es,Ts), %
     assigned_constraints(Assoc).
     
 % core_constraints(+Assoc,+Employees,+Tasks)

@@ -15,9 +15,9 @@
 :- use_module(library(clpfd)).
 
 :- dynamic position/2.
-:- dynamic fte_min_max_shifts/2.
+:- dynamic fte_shifts/2.
 :- dynamic employee_skill/2.
-:- dynamic task_skills/2.
+:- dynamic role_skills/2.
 :- dynamic employee_unavailable/2.
 :- dynamic task/2.
 :- dynamic shift/2.
@@ -25,7 +25,7 @@
 
 employee(Name, FTE, ShiftCount) :-
     position(Name, FTE),
-    fte_min_max_shifts(FTE, ShiftCount).
+    fte_shifts(FTE, ShiftCount).
 
 % one entry for each position
 % position(staff_name, fte) 
@@ -149,14 +149,14 @@ position('nurse006', '1.00').
 
 % match the fte to the number of shifts required in the period
 % fte_max_shifts(fte, number_of_shifts).
-fte_min_max_shifts('1.00', 80).
-fte_min_max_shifts('0.99', 79).
-fte_min_max_shifts('0.85', 68).
-fte_min_max_shifts('0.80', 64).
-fte_min_max_shifts('0.63', 50).
-fte_min_max_shifts('0.60', 48).
-fte_min_max_shifts('0.53', 42).
-fte_min_max_shifts('0.43', 34).
+fte_shifts('1.00', 80).
+fte_shifts('0.99', 79).
+fte_shifts('0.85', 68).
+fte_shifts('0.80', 64).
+fte_shifts('0.63', 50).
+fte_shifts('0.60', 48).
+fte_shifts('0.53', 42).
+fte_shifts('0.43', 34).
 
 employee_skill('nurse001',clinician).
 % employee_skill('nurse002',clinician).
@@ -166,10 +166,10 @@ employee_skill('nurse005',bedside).
 employee_skill('nurse006',bedside).
 % employee_skill...
 
-task_skills(nc,[clinician]).
-task_skills(prn,[bedside]).
-task_skills(bedside1,[bedside]).
-% task_skills(bedside2...
+role_skills(nc,[clinician]).
+role_skills(prn,[bedside]).
+role_skills(bedside1,[bedside]).
+% role_skills(bedside2...
 
 % If needed to assert that some can't be available for some shifts
 % employee_unavailable(micah,shift(saturday,2)).
@@ -260,8 +260,8 @@ build_assoc_list(AssocAcc,[Pair|Pairs],Assoc) :-
 % this, but findall will replace the Vals with new variable references,
 % which ruins our map.)
 assoc_keys_vals(Assoc, Keys, Vals) :-
-        maplist(assoc_key_var(Assoc), Keys, Vals).
-assoc_key_var(Assoc, Key, Val) :- get_assoc(Key, Assoc, Val).
+        maplist(assoc_key_val(Assoc), Keys, Vals).
+assoc_key_val(Assoc, Key, Val) :- get_assoc(Key, Assoc, Val).
 
 % list_or(+Exprs,-Disjunction)
 list_or([L|Ls], Or) :- foldl(disjunction_, Ls, L, Or).
@@ -285,3 +285,97 @@ disjunction_(A, B, B#\/A).
 %   (e) No more than 2 weekends in a month period
 % (4) No employee scheduled for multiple roles in the same shift
 % (5) Any pre-existing scheduled shifts (employee_assigned) must still hold.
+schedule(Es, Rs, Schedule) :-
+    get_employees(Es),
+    get_roles(Rs),
+    create_assoc_list(Es,Rs,Assoc),
+    assoc_to_keys(Assoc,AssocKeys),
+    assoc_to_values(Assoc,_AssocValues),
+    constraints(Assoc,Es,Rs),
+    
+    % label(AssocValues),
+    
+    % The following commented lines are useful for writing out the solution 
+    % in an intuitive format
+    % writeln('Assoc = '),
+    % findall(_,(
+    %         member(Key,AssocKeys),
+    %         get_assoc(Key,Assoc,Val),
+    %         format('(~w,~w)~n',[Key,Val])
+    %     ),_),
+    
+    findall(AssocKey,(member(AssocKey,AssocKeys),get_assoc(AssocKey,Assoc,1)),Assignments),
+    Schedule = Assignments.
+
+%
+%
+%
+%
+%
+%
+
+% constraints(+Assoc,+Employees,+Roles)
+constraints(Assoc,Es,Rs) :-
+    % commented out because we will have way more shifts than staff
+    % core_constraints(Assoc,Es,Rs), 
+    simul_constraints(Assoc,Es,Rs),
+    skills_constraints(Assoc,Es,Rs).
+
+% core_constraints(+Assoc,+Employees,+Roles)
+%
+% Builds the main conjunctive sequence of the form:
+% (A_e(0),t(0) \/ A_e(1),t(0) \/ ...) /\ (A_e(0),t(1) \/ A_e(1),t(1) \/ ...) /\ ...
+core_constraints(Assoc,Es,Rs) :-
+    maplist(core_constraints_disj(Assoc,Es),Rs).
+
+% core_constraints_disj(+Assoc,+Employees,+Role)
+% Helper for core_constraints, builds a disjunction of sub-expressions, such that
+% at least one employee must be assigned to Role
+core_constraints_disj(Assoc,Es,R) :-
+    findall(assign(E,R),member(E,Es),Keys),
+    assoc_keys_vals(Assoc,Keys,Vals),
+    list_or(Vals,Disj),
+    Disj.
+
+% simul_constraints(+Assoc,+Employees,+Roles)
+%
+% Builds a constraint expression to prevent one person from being assigned to multiple
+% roles at the same time. Of the form:
+% (A_e(0),t(n1) + A_e(0),t(n2) + ... #=< 1) /\ (A_e(1),t(n1) + A_e(1),t(n2) + ... #=< 1)
+% where n1,n2,etc. are indices of roles that occur at the same time.
+simul_constraints(Assoc,Es,Rs) :-
+    shifts(Shifts),
+    findall(employee_shift(E,Shift),(member(E,Es),member(Shift,Shifts)),EmployeeShifts),
+    maplist(simul_constraints_subexpr(Assoc,Rs),EmployeeShifts).
+    
+simul_constraints_subexpr(Assoc,Rs,employee_shift(E,Shift)) :-
+    findall(role(RName,Shift),member(role(RName,Shift),Rs),ShiftRs),
+    findall(assign(E,R),member(R,ShiftRs),Keys),
+    assoc_keys_vals(Assoc,Keys,Vals),
+    sum(Vals,#=<,1).
+
+% skills_constraints(+Assoc,+Employees,+Roles)
+%
+% For every task t(m) for which an employee e(n) lacks sufficient skills, add a
+% constraint of the form A_e(n),t(m) = 0.
+skills_constraints(Assoc,Es,Rs) :-
+    findall(
+        assign(E,R),
+        (
+            member(R,Rs),
+            R = role(RName,_RShift),
+            role_skills(RName,RSkills),
+            member(E,Es),
+            \+employee_has_skills(E,RSkills)
+        ),Keys
+    ),
+    assoc_keys_vals(Assoc,Keys,Vals),
+    maplist(#=(0),Vals).
+                    
+
+% employee_has_skills(+Employee,+Skills)
+%
+% Fails if Employee does not possess all Skills.
+employee_has_skills(employee(Name,_,_),Skills) :-
+    findall(ESkill,employee_skill(Name,ESkill),ESkills),
+    subset(Skills, ESkills).
