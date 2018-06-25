@@ -26,8 +26,8 @@
 :- dynamic employee_assigned/2.
 
 number_shifts(N) :-
-    % N is 168.
-    N is 28.
+    % N #= 168.
+    N #= 28.
 
 employee(Name, FTE, ShiftCount) :-
     position(Name, FTE),
@@ -302,8 +302,8 @@ shifts(S) :-
 
 build_shift_list(0, S, S).
 build_shift_list(N, A, S) :-
-    N > 0,
-    N2 is N - 1, 
+    N #> 0,
+    N2 #= N - 1, 
     build_shift_list(N2, [shift(N, day), shift(N, night) | A], S).
 
 day_shifts(DayShifts) :-
@@ -399,7 +399,7 @@ assoc_key_val(Assoc, Key, Val) :- get_assoc(Key, Assoc, Val).
 
 % list_or(+Exprs,-Disjunction)
 list_or([L|Ls], Or) :- foldl(disjunction_, Ls, L, Or).
-disjunction_(A, B, B#\/A).
+disjunction_(A, B, B #\/ A).
 
 % schedule(-Schedule)
 %
@@ -439,11 +439,7 @@ schedule(Es, Rs, Schedule) :-
     %     ),_),
     
     findall(
-        AssocKey,
-        (
-            member(AssocKey,AssocKeys),get_assoc(AssocKey,Assoc,1)
-        ),
-        Assignments
+        AssocKey, (member(AssocKey,AssocKeys),get_assoc(AssocKey,Assoc,1)), Assignments
     ),
     Schedule = Assignments.
 
@@ -468,7 +464,7 @@ constraints(Assoc,Es,Rs) :-
 % core_constraints(+Assoc,+Employees,+Roles)
 %
 % Builds the main conjunctive sequence of the form:
-% (A_e(0),t(0) \/ A_e(1),t(0) \/ ...) /\ (A_e(0),t(1) \/ A_e(1),t(1) \/ ...) /\ ...
+% (Assign{e(0),t(0)} \/ Assign{e(1),t(0)} \/ ...) /\ (Assign{e(0),t(1)} \/ Assign{e(1),t(1)} \/ ...) /\ ...
 core_constraints(Assoc,Es,Rs) :-
     maplist(core_constraints_disj(Assoc,Es),Rs).
 
@@ -476,7 +472,7 @@ core_constraints(Assoc,Es,Rs) :-
 % Helper for core_constraints, builds a disjunction of sub-expressions, such that
 % at least one employee must be assigned to Role
 core_constraints_disj(Assoc,Es,R) :-
-    findall(assign(E,R),member(E,Es),Keys),
+    findall(assign(E,R), member(E,Es), Keys),
     assoc_keys_vals(Assoc,Keys,Vals),
     list_or(Vals,Disj),
     Disj.
@@ -489,33 +485,12 @@ core_constraints_disj(Assoc,Es,R) :-
 % where n1,n2,etc. are indices of roles that occur at the same time.
 simul_constraints(Assoc,Es,Rs) :-
     shifts(Shifts),
-    findall(
-        employee_shift(E,Shift),
-        (
-            member(E,Es),
-            member(Shift,Shifts)
-            ),
-        EmployeeShifts
-        ),
-    maplist(
-        simul_constraints_subexpr(Assoc,Rs),
-        EmployeeShifts
-        ).
+    findall(employee_shift(E,Shift), (member(E,Es), member(Shift,Shifts)), EmployeeShifts),
+    maplist(simul_constraints_subexpr(Assoc,Rs), EmployeeShifts).
     
 simul_constraints_subexpr(Assoc,Rs,employee_shift(E,Shift)) :-
-    findall(
-        role(RName,Shift),
-        member(
-            role(RName,Shift),
-            Rs
-            ),
-        ShiftRs
-        ),
-    findall(
-        assign(E,R),
-        member(R,ShiftRs),
-        Keys
-        ),
+    findall(role(RName,Shift), member(role(RName,Shift), Rs), ShiftRs),
+    findall(assign(E,R), member(R,ShiftRs), Keys),
     assoc_keys_vals(Assoc,Keys,Vals),
     sum(Vals,#=<,1).
 
@@ -541,14 +516,13 @@ max_shifts_constraints(Assoc,Es,Rs) :-
 % constraint of the form A_e(n),t(m) = 0.
 skills_constraints(Assoc,Es,Rs) :-
     findall(
-        assign(E,R),
-        (
+        assign(E,R), (
             member(R,Rs),
             R = role(RName,_RShift),
             role_skills(RName,RSkills),
             member(E,Es),
             \+employee_has_skills(E,RSkills)
-        ),Keys
+        ), Keys
     ),
     assoc_keys_vals(Assoc,Keys,Vals),
     maplist(#=(0),Vals).
@@ -612,7 +586,7 @@ night_to_day_contraints(Assoc, Es, Rs) :-
 
                 S1 = shift(S1num, night),
                 S2 = shift(S2num, day),
-                S2num is mod((S1num + 1), N)
+                S2num #= mod((S1num + 1), N)
                 ),
             DayShiftFollowingNight
             ),
@@ -622,18 +596,35 @@ night_to_day_contraints(Assoc, Es, Rs) :-
         ).
 
 night_to_day_contraints_subexpr(Assoc, Rs, day_shift_following_night(E, S)) :-
-    findall(
-        role(RName, S),
-        member(
-            role(RName, S),
-            Rs
-            ),
-        ShiftRs
-        ),
-    findall(
-        assign(E, R),
-        member(R, ShiftRs),
-        Keys
-        ),
+    findall(role(RName, S), member(role(RName, S), Rs), ShiftRs),
+    findall(assign(E, R), member(R, ShiftRs), Keys),
     assoc_keys_vals(Assoc, Keys, Vals),
-    sum(Vals, #=<, 1). %% <-- need to change this meaningful check
+    sum(Vals, #=, 0).
+
+ntd_test(Assoc, Schedule) :-
+    Es = [
+            employee(test001, fte, 4),
+            employee(test002, fte, 4)
+        ], 
+    Rs = [
+            role(bedside001, shift(1, day)), role(bedside001, shift(1, night)) %,
+            % role(bedside001, shift(2, day)), role(bedside001, shift(2, night)),
+            % role(bedside001, shift(3, day)), role(bedside001, shift(3, night))
+        ],
+    create_assoc_list(Es, Rs, Assoc),
+    assoc_to_keys(Assoc,AssocKeys),
+
+    core_constraints(Assoc,Es,Rs), 
+    % night_to_day_contraints(Assoc, Es, Rs),
+
+    % writeln('Assoc = '),
+    % findall(_,(
+    %         member(Key,AssocKeys),
+    %         get_assoc(Key,Assoc,Val),
+    %         format('(~w,~w)~n',[Key,Val])
+    %     ),_),
+
+    findall(
+        AssocKey, (member(AssocKey,AssocKeys),get_assoc(AssocKey,Assoc,1)), Assignments
+    ),
+    Schedule = Assignments.
