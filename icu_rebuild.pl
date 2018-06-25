@@ -604,7 +604,7 @@ night_to_day_contraints(Assoc, Es, Rs) :-
         number_shifts(N),
         shifts(Shifts),
         findall(
-            shift_sequence_pair(E, S1, S2),
+            day_shift_following_night(E, S2),
             (
                 %constrain it to the employee
                 member(E, Es),
@@ -614,18 +614,18 @@ night_to_day_contraints(Assoc, Es, Rs) :-
                 S2 = shift(S2num, day),
                 S2num is mod((S1num + 1), N)
                 ),
-            ShiftSequencePairs
+            DayShiftFollowingNight
             ),
         maplist(
             night_to_day_contraints_subexpr(Assoc, Rs),
-            ShiftSequencePairs
+            DayShiftFollowingNight
         ).
 
-night_to_day_contraints_subexpr(Assoc, Rs, shift_sequence_pair(E, _S1, S2)) :-
+night_to_day_contraints_subexpr(Assoc, Rs, day_shift_following_night(E, S)) :-
     findall(
-        role(RName, S2),
+        role(RName, S),
         member(
-            role(RName, S2),
+            role(RName, S),
             Rs
             ),
         ShiftRs
@@ -636,4 +636,4 @@ night_to_day_contraints_subexpr(Assoc, Rs, shift_sequence_pair(E, _S1, S2)) :-
         Keys
         ),
     assoc_keys_vals(Assoc, Keys, Vals),
-    sum(Vals, #=<, 1).
+    sum(Vals, #=<, 1). %% <-- need to change this meaningful check
