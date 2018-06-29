@@ -601,28 +601,32 @@ night_to_day_contraints_subexpr(Assoc, Rs, day_shift_following_night(E, S)) :-
     assoc_keys_vals(Assoc, Keys, Vals),
     sum(Vals, #=, 0).
 
-ntd_test(Assoc, Schedule) :-
+ntd_test(Schedule) :-
     Es = [
             employee(test001, fte, 4),
             employee(test002, fte, 4)
         ], 
     Rs = [
-            role(bedside001, shift(1, day)), role(bedside001, shift(1, night)) %,
+            role(bedside001, shift(one, day)), role(bedside001, shift(one, night)) %,
             % role(bedside001, shift(2, day)), role(bedside001, shift(2, night)),
             % role(bedside001, shift(3, day)), role(bedside001, shift(3, night))
-        ],
+        ], 
     create_assoc_list(Es, Rs, Assoc),
-    assoc_to_keys(Assoc,AssocKeys),
+    assoc_to_keys(Assoc, AssocKeys),
+    % assoc_to_values(Assoc,AssocValues),
 
-    core_constraints(Assoc,Es,Rs), 
+    % label(AssocValues),
+
+    core_constraints(Assoc, Es, Rs), 
+    simul_constraints(Assoc, Es, Rs),
     % night_to_day_contraints(Assoc, Es, Rs),
 
-    % writeln('Assoc = '),
-    % findall(_,(
-    %         member(Key,AssocKeys),
-    %         get_assoc(Key,Assoc,Val),
-    %         format('(~w,~w)~n',[Key,Val])
-    %     ),_),
+    writeln('Assoc = '),
+    findall(_,(
+            member(Key,AssocKeys),
+            get_assoc(Key,Assoc,Val),
+            format('(~w,~w)~n',[Key,Val])
+        ),_),
 
     findall(
         AssocKey, (member(AssocKey,AssocKeys),get_assoc(AssocKey,Assoc,1)), Assignments
